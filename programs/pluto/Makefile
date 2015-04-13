@@ -114,7 +114,7 @@ DISTSRC = \
 	ikev1_dpd.c ikev1_dpd.h ikev1_spdb_struct.c \
 	ikev1_msgid.c \
         ikev2.c ikev2_parent.c ikev2_child.c ikev2_crypto.c \
-	crypt_prf.c ikev1_prf.c ikev2_prf.c \
+	crypt_symkey.c crypt_prf.c ikev1_prf.c ikev2_prf.c \
 	ikev2_spdb_struct.c \
 	ikev2_rsa.c ikev2_psk.c \
 	kernel.c kernel.h \
@@ -168,7 +168,7 @@ OBJSPLUTO += myid.o ipsec_doi.o
 OBJSPLUTO += ikev1.o ikev1_main.o ikev1_quick.o ikev1_dpd.o ikev1_spdb_struct.o ikev1_msgid.o
 OBJSPLUTO += ikev2.o ikev2_parent.o ikev2_child.o ikev2_spdb_struct.o 
 OBJSPLUTO += ikev2_rsa.o ikev2_psk.o ikev2_crypto.o
-OBJSPLUTO += crypt_prf.o ikev1_prf.o ikev2_prf.o
+OBJSPLUTO += crypt_symkey.o crypt_prf.o ikev1_prf.o ikev2_prf.o
 OBJSPLUTO += kernel.o
 OBJSPLUTO += $(NETKEY_OBJS) $(BSDKAME_OBJS) ${KLIPS_OBJS} ${MAST_OBJS} ${WIN2K_OBJS} ${PFKEYv2_OBJS}
 OBJSPLUTO += kernel_noklips.o rcv_whack.o
@@ -201,8 +201,8 @@ ifeq ($(SHOULDWERESTART),plutomain.c)
 all programs clean install:
 	cd ${LIBRESWANSRCDIR} && cd ${OBJDIRTOP}/programs/pluto && $(MAKE) $@
 else
-all: $(BINNAMEPLUTO) $(BINNAMEADNSIFNEEDED) $(BINNAMEWHACK) #$(BINNAMEWHACKINIT)
-programs: $(BINNAMEPLUTO) $(BINNAMEADNSIFNEEDED) $(BINNAMEWHACK) $(MANPAGES) #$(BINNAMEWHACKINIT) 
+all: $(BINNAMEPLUTO) $(BINNAMEADNSIFNEEDED) $(BINNAMEWHACK) cavs #$(BINNAMEWHACKINIT)
+programs: $(BINNAMEPLUTO) $(BINNAMEADNSIFNEEDED) $(BINNAMEWHACK) $(MANPAGES) #$(BINNAMEWHACKINIT) cavs
 clean:	cleanall
 install: doinstall
 endif
@@ -284,6 +284,12 @@ checkprograms:
 
 %.i: %.c
 	$(CC) $(MK_DEPEND_CFLAGS) -E -o $@ $<
+
+# This is for fips stuff, its assumed cwd is builddir
+cavs: $(BINNAMEPLUTO) $(top_srcdir)/testing/cavs/cavs.c
+	$(CC) -o cavs -I$(srcdir) \
+		 $(USERLAND_CFLAGS) ${PORTINCLUDE} $(COPTS) $(HDRDIRS) $(DEFINES) $(NSSFLAGS) $(CFLAGS) ${CROSSFLAGS} \
+		$(LDFLAGS) $(USERLINK) $(filter-out plutomain.o, $(OBJSPLUTO)) $(LIBSPLUTO) ${PLUTOMINUSL} $(top_srcdir)/testing/cavs/cavs.c
 
 MK_DEPEND_FILES = $(DIST)
 MK_DEPEND_CFLAGS = $(USERLAND_CFLAGS) ${PORTINCLUDE} $(COPTS) $(HDRDIRS) $(DEFINES) $(NSSFLAGS) $(CFLAGS) ${CROSSFLAGS}
